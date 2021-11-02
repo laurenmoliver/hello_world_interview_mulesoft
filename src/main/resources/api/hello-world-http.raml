@@ -1,0 +1,38 @@
+#%RAML 1.0
+title: Interview API - v1
+version: 1.0
+
+documentation:
+  - title: My Company - Interview API
+    content: Interview
+
+mediaType: 
+  - application/json
+protocols: [HTTP]
+
+uses:
+
+traits:
+  client-id-required:
+    headers:
+      id:
+        type: string
+        required: false    
+      secret:
+        type: string
+        required: false
+                
+/hello:
+  is: [client-id-required]
+  put:
+    description: Returns a greeting.
+    responses:
+      200:
+        body:
+          application/json:
+            type: string
+            example: |
+              {"MESSAGE": "HELLO USER!"}
+
+          
+        
