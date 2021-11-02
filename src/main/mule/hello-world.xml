@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="hello-world-batchFlow" doc:id="ff5dd519-12c6-4a62-b197-441b212eed0b" >
+		<scheduler doc:name="Scheduler" doc:id="52f1159c-b366-4488-94fd-08f455c43e6e" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="6" startDelay="2" timeUnit="HOURS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="2b9ea2be-2dbd-456d-be65-716e47a470a7" message="batch flow starting"/>
+		<salesforce:query-all doc:name="Query" doc:id="b9337cce-eb3d-4ccd-b111-8718ef676b11" config-ref="Salesforce_Config">
+			<reconnect />
+			<salesforce:salesforce-query ><![CDATA[Select Id, Name from Account limit :LIMIT]]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"LIMIT" : vars.limit
+}]]]></salesforce:parameters>
+		</salesforce:query-all>
+		<batch:job jobName="hello-worldBatch_Job" doc:id="54a9da28-d06f-44d9-b907-b962ba57c94c" maxFailedRecords="-1" maxConcurrency="3">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="603e799c-3e7a-4c96-b039-4df55971de61" >
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="ed00da3f-ec78-4401-9930-0ae00884bf85" size="200">
+						<logger level="INFO" doc:name="Logger" doc:id="ae821d30-1fd7-481b-9072-f2c492d3cd8f" />
+						<ee:transform doc:name="Transform Message" doc:id="8e2b2dea-e86b-458d-a144-46c330952e0d" >
+							<ee:message >
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="soqlFilter" ><![CDATA[%dw 2.0
+output application/java
+
+fun setFilterSoqlList(inputVar) =
+	" where AccountId in (" ++ ((inputVar map ("'" ++ $ ++"'")) joinBy ",") ++ ")"
+---
+setFilterSoqlList(payload.Id default [])]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+						<salesforce:query doc:name="Query" doc:id="b79f2940-4718-43cb-b6b8-e64f0e384b31" config-ref="Salesforce_Config">
+							<salesforce:salesforce-query ><![CDATA[Select Id, Name from Contact :SOQLFILTER]]></salesforce:salesforce-query>
+							<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	SOQLFILTER : vars.soqlFilter
+}]]]></salesforce:parameters>
+						</salesforce:query>
+						<logger level="INFO" doc:name="Logger" doc:id="481cbe98-6379-4d66-b18b-d380b1248768" message='#["PLACEHOLDER. Will log records for now."]'/>
+						<logger level="INFO" doc:name="Logger" doc:id="aa45b0bb-80a5-4de7-a47d-2c6a7817d3cb" message="#[payload.Id]"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="ERROR" doc:name="Logger" doc:id="e4b22d0c-df5e-4d0e-951e-387adf807db0" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" 
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:salesforce=
+	"http://www.mulesoft.org/schema/mule/salesforce" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+	
+	
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	
+	
+	<configuration-properties doc:name="Common Configuration properties" doc:id="8978feba-2fc1-4d5d-8fe6-6040d24cead1" file="config/common.yaml" />
+	
+	<configuration-properties doc:name="Configuration properties" doc:id="fc8e3b86-42c9-43c2-a189-0851e347cd1c" file="config/dev.yaml" />
+
+	 <salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="7ae72067-e2ba-4f1f-9c57-9e60ddfc8e98" >
+		<salesforce:basic-connection username="${secure::salesforceusername}" password="${secure::salesforcepassword}" securityToken="${secure::salesforcetoken}" url="${salesforceurl}" >
+			<reconnection failsDeployment="true" />
+		</salesforce:basic-connection>
+	</salesforce:sfdc-config>
+
+    <api-gateway:autodiscovery apiId="${autodiscover}" doc:name="API Autodiscovery" doc:id="88b63896-a27f-4f1a-9afc-6f9e28c5e955" flowRef="main" />
+	<global-property doc:name="Global Property" doc:id="76f6c098-5a80-4da4-b3be-9b7dd1278742" name="MULE_SECURE_KEY" value="1234512345123456" />
+
+
+</mule>
